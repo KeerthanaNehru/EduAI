@@ -1,0 +1,38 @@
+# ============================================================
+# EduAI Backend — Python Requirements
+# Location: place this file inside your  backend/  folder
+#
+# Install command:
+#   pip install -r requirements.txt
+# ============================================================
+
+# Web framework
+fastapi
+uvicorn[standard]
+
+# Database (SQLite async — zero setup needed)
+sqlalchemy
+aiosqlite
+
+# Authentication (JWT + password hashing)
+PyJWT
+passlib[bcrypt]
+bcrypt
+
+# Settings / .env file support
+pydantic-settings
+
+# File uploads (multipart form data)
+python-multipart
+
+# HTTP client (used to call Gemini AI API)
+httpx
+
+# PDF text extraction (for SummaryAI / QuizAI / DoubtAI)
+PyPDF2
+
+# YouTube transcript extraction (for AI on YouTube links)
+youtube-transcript-api
+
+# File serving / response utilities (included in fastapi, listed for clarity)
+python-jose[cryptography]
