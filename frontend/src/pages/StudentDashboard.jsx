@@ -17,7 +17,6 @@ const QUICK_LINKS = [
   { to:'/student/content', icon:'📚', title:'Study Content', desc:'View PDFs, videos & docs from teachers', color:'rgba(168,85,247,0.1)' },
   { to:'/student/ai', icon:'🤖', title:'AI Tools', desc:'Summary, Quiz & Doubt clarification', color:'rgba(124,58,237,0.1)' },
   { to:'/student/quizzes', icon:'📝', title:'Quizzes', desc:'Take teacher-posted quizzes', color:'rgba(232,121,249,0.1)' },
-  { to:'/student/results', icon:'🏆', title:'My Results', desc:'View your private test results', color:'rgba(168,85,247,0.08)' },
 ]
 
 export default function StudentDashboard() {

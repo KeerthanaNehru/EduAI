@@ -8,7 +8,6 @@ import StudentDashboard from './pages/StudentDashboard'
 import StudentContent from './pages/StudentContent'
 import StudentAI from './pages/StudentAI'
 import StudentQuizzes from './pages/StudentQuizzes'
-import StudentResults from './pages/StudentResults'
 import Layout from './components/Layout'
 
 function PrivateRoute({ children, role }) {
@@ -34,7 +33,6 @@ function App() {
           <Route path="content/:subject" element={<StudentContent />} />
           <Route path="ai" element={<StudentAI />} />
           <Route path="quizzes" element={<StudentQuizzes />} />
-          <Route path="results" element={<StudentResults />} />
         </Route>
       </Routes>
     </AuthProvider>

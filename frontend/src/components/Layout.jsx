@@ -12,7 +12,6 @@ export default function Layout({ children }) {
     { to:'/student/content', label:'Content', icon:'📚' },
     { to:'/student/ai', label:'AI Tools', icon:'🤖' },
     { to:'/student/quizzes', label:'Quizzes', icon:'📝' },
-    { to:'/student/results', label:'My Results', icon:'🏆' },
   ] : []
 
   const isActive = (to) => to === '/student' ? location.pathname === '/student' : location.pathname.startsWith(to)
