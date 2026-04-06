@@ -35,11 +35,10 @@ export default function TeacherDashboard() {
   const [postingQuiz, setPostingQuiz] = useState(false)
 
   // Results
-  const [resultStudentId, setResultStudentId] = useState('')
   const [resultTestName, setResultTestName] = useState('')
-  const [resultMarks, setResultMarks] = useState('')
   const [resultTotal, setResultTotal] = useState('')
-  const [resultFeedback, setResultFeedback] = useState('')
+  const [registeredStudents, setRegisteredStudents] = useState([])
+  const [studentMarks, setStudentMarks] = useState({}) // { studentId: { marks: '', feedback: '' } }
   const [postingResult, setPostingResult] = useState(false)
   const [resultSuccess, setResultSuccess] = useState(false)
 
@@ -47,6 +46,24 @@ export default function TeacherDashboard() {
   const loadQuizzes = async () => { try { const { data } = await api.get('/quiz/teacher/my'); setQuizzes(data) } catch {} }
 
   useEffect(() => { loadContent(); loadQuizzes() }, [])
+
+  useEffect(() => {
+    if (activeTab === 'results') {
+      const fetchStudents = async () => {
+        try {
+          const { data } = await api.get('/results/students')
+          setRegisteredStudents(data)
+          // Initialize marks state for each student if not already present
+          const initialMarks = {}
+          data.forEach(s => {
+            initialMarks[s.id] = { marks: '', feedback: '' }
+          })
+          setStudentMarks(initialMarks)
+        } catch (err) { console.error("Failed to load students", err) }
+      }
+      fetchStudents()
+    }
+  }, [activeTab])
 
   const handleUpload = async (e) => {
     e.preventDefault(); setUploading(true); setUploadSuccess(false)
@@ -85,10 +102,32 @@ export default function TeacherDashboard() {
   const handlePostResult = async (e) => {
     e.preventDefault(); setPostingResult(true); setResultSuccess(false)
     try {
-      await api.post('/results/', { student_id: parseInt(resultStudentId), subject: user.subject, test_name: resultTestName, marks_obtained: parseFloat(resultMarks), total_marks: parseFloat(resultTotal), feedback: resultFeedback || undefined })
-      setResultStudentId(''); setResultTestName(''); setResultMarks(''); setResultTotal(''); setResultFeedback('')
-      setResultSuccess(true); setTimeout(() => setResultSuccess(false), 3000)
-    } catch (err) { alert(err.response?.data?.detail || 'Failed to post result') }
+      const payload = {
+        subject: user.subject,
+        test_name: resultTestName,
+        total_marks: parseFloat(resultTotal),
+        results: Object.entries(studentMarks)
+          .filter(([_, data]) => data.marks !== '')
+          .map(([id, data]) => ({
+            student_id: parseInt(id),
+            marks_obtained: parseFloat(data.marks),
+            feedback: data.feedback || undefined
+          }))
+      }
+      
+      if (payload.results.length === 0) {
+        alert("Please enter marks for at least one student.")
+        setPostingResult(false)
+        return
+      }
+
+      await api.post('/results/bulk', payload)
+      setResultTestName(''); setResultTotal('')
+      const clearedMarks = {}
+      registeredStudents.forEach(s => clearedMarks[s.id] = { marks: '', feedback: '' })
+      setStudentMarks(clearedMarks)
+      setResultSuccess(true); setTimeout(() => setResultSuccess(false), 5000)
+    } catch (err) { alert(err.response?.data?.detail || 'Failed to post results') }
     setPostingResult(false)
   }
 
@@ -249,23 +288,77 @@ export default function TeacherDashboard() {
 
       {/* ── RESULTS TAB ── */}
       {activeTab === 'results' && (
-        <div style={{ maxWidth:'520px' }}>
+        <div style={{ maxWidth:'100%' }}>
           <div style={cardStyle}>
-            <h2 style={{ color:'#e2e8f0', fontWeight:700, marginBottom:'8px', fontSize:'1rem' }}>🏆 Post Student Result</h2>
-            <p style={{ color:'#64748b', fontSize:'0.8rem', marginBottom:'20px' }}>Results are private — each student sees only their own marks.</p>
-            {resultSuccess && <div style={{ background:'rgba(34,197,94,0.1)', border:'1px solid rgba(34,197,94,0.3)', color:'#4ade80', borderRadius:'8px', padding:'10px 14px', fontSize:'0.85rem', marginBottom:'14px' }}>✅ Result posted successfully!</div>}
-            <form onSubmit={handlePostResult}>
-              <div style={inp}><label style={lbl}>Student ID</label><input className="input-dark" type="number" placeholder="e.g. 3" value={resultStudentId} onChange={e=>setResultStudentId(e.target.value)} required /></div>
-              <div style={inp}><label style={lbl}>Test / Exam Name</label><input className="input-dark" placeholder="e.g. Unit Test 1 — Algebra" value={resultTestName} onChange={e=>setResultTestName(e.target.value)} required /></div>
-              <div style={{ ...inp, display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px' }}>
-                <div><label style={lbl}>Marks Obtained</label><input className="input-dark" type="number" step="0.01" placeholder="e.g. 45" value={resultMarks} onChange={e=>setResultMarks(e.target.value)} required /></div>
-                <div><label style={lbl}>Total Marks</label><input className="input-dark" type="number" step="0.01" placeholder="e.g. 50" value={resultTotal} onChange={e=>setResultTotal(e.target.value)} required /></div>
+            <div style={{ marginBottom: '24px', display:'flex', justifyContent:'space-between', alignItems:'flex-end', gap:'20px', flexWrap:'wrap' }}>
+              <div style={{ flex: 1 }}>
+                <h2 style={{ color:'#e2e8f0', fontWeight:700, marginBottom:'8px', fontSize:'1rem' }}>🏆 Bulk Results Entry</h2>
+                <p style={{ color:'#64748b', fontSize:'0.8rem', margin:0 }}>Enter marks for all registered students at once. Each student only sees their own marks.</p>
               </div>
-              <div style={inp}><label style={lbl}>Feedback (optional)</label><input className="input-dark" placeholder="e.g. Great performance! Keep it up." value={resultFeedback} onChange={e=>setResultFeedback(e.target.value)} /></div>
-              <button type="submit" className="btn-purple" disabled={postingResult} style={{ width:'100%', padding:'12px', marginTop:'4px' }}>
-                {postingResult ? '⏳ Posting...' : '🏆 Post Result'}
+              <div style={{ display:'flex', gap:'12px' }}>
+                <div style={{ width:'200px' }}><label style={lbl}>Test / Exam Name</label><input className="input-dark" placeholder="Unit Test 1" value={resultTestName} onChange={e=>setResultTestName(e.target.value)} required /></div>
+                <div style={{ width:'120px' }}><label style={lbl}>Max Marks</label><input className="input-dark" type="number" placeholder="100" value={resultTotal} onChange={e=>setResultTotal(e.target.value)} required /></div>
+              </div>
+            </div>
+
+            {resultSuccess && <div style={{ background:'rgba(34,197,94,0.1)', border:'1px solid rgba(34,197,94,0.3)', color:'#4ade80', borderRadius:'8px', padding:'10px 14px', fontSize:'0.85rem', marginBottom:'20px' }}>✅ All results have been posted successfully!</div>}
+            
+            <div style={{ overflowX:'auto', borderRadius:'12px', border:'1px solid #1e1030', background:'rgba(255,255,255,0.01)' }}>
+              <table style={{ width:'100%', borderCollapse:'collapse', fontSize:'0.875rem' }}>
+                <thead>
+                  <tr style={{ borderBottom:'1px solid #1e1030', textAlign:'left' }}>
+                    <th style={{ padding:'14px 18px', color:'#94a3b8', fontWeight:600 }}>STUDENT NAME</th>
+                    <th style={{ padding:'14px 18px', color:'#94a3b8', fontWeight:600 }}>ID</th>
+                    <th style={{ padding:'14px 18px', color:'#94a3b8', fontWeight:600 }}>ROLL NUMBER</th>
+                    <th style={{ padding:'14px 18px', color:'#94a3b8', fontWeight:600, width:'140px' }}>MARKS OBTAINED</th>
+                    <th style={{ padding:'14px 18px', color:'#94a3b8', fontWeight:600 }}>FEEDBACK / COMMENTS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {registeredStudents.length === 0 && (
+                    <tr><td colSpan="5" style={{ padding:'40px', textAlign:'center', color:'#475569' }}>No students enrolled in this subject yet.</td></tr>
+                  )}
+                  {registeredStudents.map(student => (
+                    <tr key={student.id} style={{ borderBottom:'1px solid #1e1030', transition:'background 0.2s' }} className="table-row-hover">
+                      <td style={{ padding:'12px 18px', color:'#e2e8f0', fontWeight:500 }}>{student.full_name}</td>
+                      <td style={{ padding:'12px 18px', color:'#64748b' }}>#{student.id}</td>
+                      <td style={{ padding:'12px 18px', color:'#e2e8f0', fontWeight:600 }}>{student.roll_number || '—'}</td>
+                      <td style={{ padding:'12px 18px' }}>
+                        <input 
+                          className="input-dark-sm" 
+                          type="number" 
+                          placeholder="0"
+                          style={{ width:'100%', textAlign:'center' }}
+                          value={studentMarks[student.id]?.marks || ''}
+                          onChange={e => setStudentMarks({...studentMarks, [student.id]: { ...studentMarks[student.id], marks: e.target.value }})}
+                        />
+                      </td>
+                      <td style={{ padding:'12px 18px' }}>
+                        <input 
+                          className="input-dark-sm" 
+                          placeholder="Optional feedback..."
+                          style={{ width:'100%' }}
+                          value={studentMarks[student.id]?.feedback || ''}
+                          onChange={e => setStudentMarks({...studentMarks, [student.id]: { ...studentMarks[student.id], feedback: e.target.value }})}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div style={{ marginTop:'24px', display:'flex', justifyContent:'flex-end' }}>
+              <button 
+                type="button" 
+                onClick={handlePostResult} 
+                className="btn-purple" 
+                disabled={postingResult || !resultTestName || !resultTotal} 
+                style={{ padding:'14px 40px', fontSize:'0.9rem' }}
+              >
+                {postingResult ? '⏳ Posting Results...' : '🏆 Post Results to All Students'}
               </button>
-            </form>
+            </div>
           </div>
         </div>
       )}

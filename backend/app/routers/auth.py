@@ -26,6 +26,7 @@ async def register(data: UserCreate, db: AsyncSession = Depends(get_db)):
         full_name=data.full_name,
         role=UserRole(data.role),
         subject=data.subject if data.role == "teacher" else None,
+        roll_number=data.roll_number if data.role == "student" else None,
     )
     db.add(user)
     await db.flush()
@@ -40,6 +41,7 @@ async def register(data: UserCreate, db: AsyncSession = Depends(get_db)):
             full_name=user.full_name,
             role=user.role.value,
             subject=user.subject,
+            roll_number=user.roll_number,
         ),
     )
 
@@ -64,6 +66,7 @@ async def login(data: UserLogin, db: AsyncSession = Depends(get_db)):
             full_name=user.full_name,
             role=user.role.value,
             subject=user.subject,
+            roll_number=user.roll_number,
         ),
     )
 
@@ -76,4 +79,5 @@ async def me(current_user: User = Depends(get_current_user)):
         full_name=current_user.full_name,
         role=current_user.role.value,
         subject=current_user.subject,
+        roll_number=current_user.roll_number,
     )

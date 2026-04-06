@@ -8,6 +8,7 @@ class UserCreate(BaseModel):
     full_name: str
     role: str  # "teacher" | "student"
     subject: Optional[str] = None  # For teachers only
+    roll_number: Optional[str] = None  # For students only
 
 
 class UserLogin(BaseModel):
@@ -21,6 +22,7 @@ class UserResponse(BaseModel):
     full_name: str
     role: str
     subject: Optional[str] = None
+    roll_number: Optional[str] = None
 
     class Config:
         from_attributes = True

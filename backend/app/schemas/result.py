@@ -12,6 +12,19 @@ class TestResultCreate(BaseModel):
     feedback: Optional[str] = None
 
 
+class ResultItem(BaseModel):
+    student_id: int
+    marks_obtained: float
+    feedback: Optional[str] = None
+
+
+class TestResultBulkCreate(BaseModel):
+    subject: str
+    test_name: str
+    total_marks: float
+    results: list[ResultItem]
+
+
 class TestResultResponse(BaseModel):
     id: int
     subject: str

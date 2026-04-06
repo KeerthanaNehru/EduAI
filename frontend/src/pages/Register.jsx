@@ -10,6 +10,7 @@ export default function Register() {
   const [fullName, setFullName] = useState('')
   const [role, setRole]         = useState('student')
   const [subject, setSubject]   = useState('')
+  const [rollNumber, setRollNumber] = useState('')
   const [error, setError]       = useState('')
   const [loading, setLoading]   = useState(false)
   const { register } = useAuth()
@@ -37,6 +38,7 @@ export default function Register() {
         full_name: fullName.trim(),
         role,
         subject:   role === 'teacher' ? subject : null,
+        roll_number: role === 'student' ? rollNumber.trim() : null,
       })
       // Go straight to dashboard after registration
       navigate(user.role === 'teacher' ? '/teacher' : '/student')
@@ -169,6 +171,18 @@ export default function Register() {
                     </option>
                   ))}
                 </select>
+              </div>
+            )}
+
+            {role === 'student' && (
+              <div style={field}>
+                <label style={lbl}>Roll Number / Student ID</label>
+                <input
+                  className="input-dark" style={inputStyle}
+                  placeholder="e.g. 2024-MECH-001"
+                  value={rollNumber} onChange={e => setRollNumber(e.target.value)}
+                  required
+                />
               </div>
             )}
 

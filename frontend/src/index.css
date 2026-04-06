@@ -117,4 +117,24 @@ html, body, #root {
 
 p { font-size: 1rem; margin: 0; }
 label { font-size: 1rem; }
-select option { font-size: 1rem; }
+.input-dark-sm {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 8px 12px;
+  width: 100%;
+  outline: none;
+  font-family: 'Syne', sans-serif;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+.input-dark-sm:focus {
+  background: rgba(255,255,255,0.05);
+  border-color: var(--purple);
+  box-shadow: 0 0 0 2px rgba(168,85,247,0.1);
+}
+
+.table-row-hover:hover {
+  background: rgba(255,255,255,0.03) !important;
+}

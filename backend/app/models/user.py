@@ -21,6 +21,9 @@ class User(Base):
     
     # For teachers: their subject
     subject = Column(String(50), nullable=True)  # Only for teachers
-    
+
+    # For students: their roll number
+    roll_number = Column(String(50), nullable=True)  # Only for students
+
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
